@@ -1,2 +1,2 @@
 # sockets_chat
- Procesos e hilos (Sofiya Kogut)
+ Procesos e hilos ( DAM2 - Sofiya Kogut)
