@@ -2,53 +2,35 @@ package Servidor;
 
 import java.io.*;
 import java.net.*;
-import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class mainServidor {
-
-	public static void main(String[] args) {
+    public static void main(String[] args) {
         int puerto = 1234;
         String palabraClave = "adios";
+        int maxClients = 2; // Argumento para el número máximo de clientes.
 
         try {
-        	ServerSocket serverSocket = new ServerSocket(puerto);
+            ServerSocket serverSocket = new ServerSocket(puerto);
             System.out.println("Iniciando servidor... OK");
 
-            Socket socket = serverSocket.accept();
-            PrintWriter salida = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            Scanner scanner = new Scanner(System.in);
+            ExecutorService pool = Executors.newFixedThreadPool(maxClients);
 
-            String mensaje;
-            boolean continuar = true;
+            for (int i = 1; i <= maxClients; i++) {
+                Socket socket = serverSocket.accept();
+                System.out.println("Conexión desde el cliente " + i + "... OK");
 
-            while (continuar) {
-                mensaje = entrada.readLine();
-                if (mensaje.equalsIgnoreCase(palabraClave)) {
-                    continuar = false;
-                } else {
-                    System.out.println("Cliente: " + mensaje);
-
-                    System.out.print("Servidor: ");
-                    mensaje = scanner.nextLine();
-                    salida.println(mensaje);
-                    if (mensaje.equalsIgnoreCase(palabraClave)) {
-                        continuar = false;
-                    }
-                }
+                Runnable r = new Handler(socket, i, palabraClave);
+                pool.execute(r);
             }
-            System.out.println("Cerrando servidor... OK");
-            
-            scanner.close();
-            entrada.close();
-            salida.close();
-            socket.close();
+
+            pool.shutdown(); // No se aceptarán más clientes.
+
             serverSocket.close();
-            
+
         } catch (IOException e) {
             System.err.println("Error en el servidor: " + e.getMessage());
         } 
-        
     }
-	
 }
